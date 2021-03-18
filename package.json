@@ -6,6 +6,7 @@
   "scripts": {
     "parcel-build": "parcel build index.html && cp _redirects ./dist/",
     "serve": "parcel index.html"
+    "server:watch": "nodemon --watch ./server -e js ./server/index.js"
   },
   "keywords": [],
   "author": "",
@@ -23,3 +24,4 @@
     "stylelint-vscode": "^7.0.0-6"
   }
 }
+lodash
