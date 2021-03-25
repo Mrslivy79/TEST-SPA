@@ -1,48 +1,62 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const pizzas = require("./routers/pizzas");
-// const users = require("./routers/users");
-// const orders = require("./routers/orders");
-
 const app = express();
-
 // Middleware
 const logging = (request, response, next) => {
   console.log(`${request.method} ${request.url} ${Date.now()}`);
   next();
 };
-
-// CORS Middleware
-const cors = (req, res, next) => {
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "X-Requested-With,content-type, Accept,Authorization,Origin"
-  );
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, OPTIONS, PUT, PATCH, DELETE"
-  );
-  res.setHeader("Access-Control-Allow-Credentials", true);
-  next();
-};
-
 app.use(express.json());
 app.use(logging);
-app.use(cors);
-app.use("/pizzas", pizzas);
-// app.use("/users", users);
-// app.use("/orders", orders);
-
 // Database stuff
 mongoose.connect("mongodb://localhost/pizza");
 const db = mongoose.connection;
-
 let db_status = "MongoDB connection not successful.";
-
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", () => (db_status = "Successfully opened connection to Mongo!"));
-
+const pizzaSchema = new mongoose.Schema({
+  crust: String,
+  cheese: String,
+  sauce: String,
+  toppings: [String]
+});
+const Pizza = mongoose.model("Pizza", pizzaSchema);
+app.post("/pizzas", (request, response) => {
+  const newPizza = new Pizza(request.body);
+  newPizza.save((err, pizza) => {
+    return err ? response.sendStatus(500).json(err) : response.json(pizza);
+  });
+});
+app.get("/pizzas", (request, response) => {
+  Pizza.find({}, (error, data) => {
+    if (error) return response.sendStatus(500).json(error);
+    return response.json(data);
+  });
+});
+app.get("/pizzas/:id", (request, response) => {
+  Pizza.findById(request.params.id, (error, data) => {
+    if (error) return response.sendStatus(500).json(error);
+    return response.json(data);
+  });
+});
+app.put("/pizzas/:id", (request, response) => {
+  const body = request.body;
+  Pizza.findByIdAndUpdate(
+    request.params.id,
+    {
+      $set: {
+        crust: body.crust,
+        cheese: body.cheese,
+        sauce: body.sauce,
+        toppings: body.toppings
+      }
+    },
+    (error, data) => {
+      if (error) return response.sendStatus(500).json(error);
+      return response.json(request.body);
+    }
+  );
+});
 app.route("/").get((request, response) => {
   response.send("HELLO WORLD");
 });
@@ -68,5 +82,3 @@ app
   .post((request, response) => {
     response.json(request);
   });
-const PORT = process.env.PORT || 4040;
-app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
