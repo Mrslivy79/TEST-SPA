@@ -35,7 +35,9 @@ app.use("/pizzas", pizzas);
 // app.use("/orders", orders);
 
 // Database stuff
-mongoose.connect("mongodb://localhost/pizza");
+mongoose.connect(
+  "mongodb+srv://livy:mongodb79@cluster0.ptrjl.mongodb.net/pizza?retryWrites=true&w=majority"
+);
 const db = mongoose.connection;
 
 let db_status = "MongoDB connection not successful.";
